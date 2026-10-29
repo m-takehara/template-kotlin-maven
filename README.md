@@ -1,22 +1,36 @@
-# Template kotlin maven
+# Gauge Kotlin / Maven template
 
-Kotlin template for Gauge using maven as build tool
+A template for writing [Gauge](https://docs.gauge.org/) specifications in Kotlin using the Gauge Java runner.
 
 ## Prerequisites
 
-```
-$ java --version
-openjdk 25.0.5 2026-10-20 LTS
-OpenJDK Runtime Environment Temurin-25.0.5+8 (build 25.0.5+8-LTS)
-OpenJDK 64-Bit Server VM Temurin-25.0.5+8 (build 25.0.5+8-LTS, mixed mode, sharing)
+- JDK 25 or later
+- Gauge 1.6.41 and its Java and HTML report plugins
+- Maven 3.9 or later
 
-$ gauge version
-Gauge version: 1.6.41
-Commit Hash: 1960cd7
+Install the plugins matching the dependencies in `pom.xml`:
+
+```sh
+gauge install java --version 1.0.3
+gauge install html-report --version 4.4.7
 ```
 
-## How to use
+## Create a project
 
+Download `kotlin_maven.zip` from the [latest release](https://github.com/m-takehara/template-kotlin-maven/releases/latest), create an empty directory and run:
+
+```sh
+gauge init /path/to/kotlin_maven.zip
 ```
-$ gauge init https://github.com/m-takehara/template-kotlin-maven/releases/download/v0.0.4/kotlin_maven.zip
+
+## Run specifications
+
+```sh
+mvn clean test
 ```
+
+The HTML report is in `reports/html-report/`. To filter scenarios, use `mvn test -Dtags="single word"`. Run `mvn test-compile` after changing Kotlin steps when using Gauge's IDE integration.
+
+## Release
+
+CI tests both the repository and a project created from the packaged template. Push a version tag such as `v0.0.5` to run those checks and publish the ZIP and its SHA-256 checksum as a GitHub release. Update `metadata.json` to the same version before tagging.

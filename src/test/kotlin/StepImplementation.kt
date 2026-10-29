@@ -3,20 +3,17 @@ import com.thoughtworks.gauge.Table
 import org.assertj.core.api.Assertions.assertThat
 
 class StepImplementation {
-    private var vowels: HashSet<Char>? = null
+    private var vowels: Set<Char> = emptySet()
 
     @Step("Vowels in English language are <vowelString>.")
     fun setLanguageVowels(vowelString: String) {
-        vowels = HashSet()
-        for (ch in vowelString.toCharArray()) {
-            vowels!!.add(ch)
-        }
+        vowels = vowelString.toSet()
     }
 
     @Step("The word <word> has <expectedCount> vowels.")
     fun verifyVowelsCountInWord(word: String, expectedCount: Int) {
         val actualCount = countVowels(word)
-        assertThat(expectedCount).isEqualTo(actualCount)
+        assertThat(actualCount).isEqualTo(expectedCount)
     }
 
     @Step("Almost all words have vowels <wordsTable>")
@@ -25,14 +22,14 @@ class StepImplementation {
             val word = row.getCell("Word")
             val expectedCount = row.getCell("Vowel Count").toInt()
             val actualCount = countVowels(word)
-            assertThat(expectedCount).isEqualTo(actualCount)
+            assertThat(actualCount).isEqualTo(expectedCount)
         }
     }
 
     private fun countVowels(word: String): Int {
         var count = 0
         for (ch in word.toCharArray()) {
-            if (vowels!!.contains(ch)) {
+            if (vowels.contains(ch)) {
                 count++
             }
         }

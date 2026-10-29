@@ -1,49 +1,55 @@
-name: release
+name: Test and release
 
 on:
   push:
-    branches: [ master ]
-    paths-ignore:
-      - metadata.json
-      - .github
-      - README.md
+    branches: [master]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
-  release:
+  test:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-java@v6.1.0
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+      - uses: getgauge/setup-gauge@master
+        with:
+          gauge-version: '1.6.41'
+      - run: |
+          gauge install java --version 1.0.3
+          gauge install html-report --version 4.4.7
+      - run: mvn --batch-mode --no-transfer-progress clean test
+      - name: Check generated template
+        run: |
+          ./scripts/package-template.sh "$RUNNER_TEMP/kotlin_maven.zip"
+          mkdir "$RUNNER_TEMP/generated-project"
+          cd "$RUNNER_TEMP/generated-project"
+          gauge init "$RUNNER_TEMP/kotlin_maven.zip"
+          mvn --batch-mode --no-transfer-progress clean test
 
-      - name: package and releases
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Package template
         run: |
-          ignored="! -path $(pwd) "
-          for i in $(cat .templateignore); do
-              ignored+="! -name $i "
-          done
-          files=$(find $(pwd) -maxdepth 1 $ignored)
-          mkdir kotlin_maven
-          cp -r $files ./kotlin_maven
-          zip -r kotlin_maven.zip ./kotlin_maven;
-          openssl sha256 kotlin_maven.zip | cut -d " " -f2 > kotlin_maven.zip.sha256
-          version=$(jq -r ".version" metadata.json)
-          version=v$version
-          hub release create -m $version $version
-          sleep 3
-          hub release edit -m "" -a kotlin_maven.zip $version
-          hub release edit -m "" -a kotlin_maven.zip.sha256 $version
-      - name: setup git
-        run: |
-          git config --global user.name "$(git --no-pager log --format=format:'%an' -n 1)"
-          git config --global user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
-      - name: bump version
-        run: |
-          git clean -dfx
-          version=$(jq -r ".version" metadata.json | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
-          echo $(jq -r ".version = \"$version\"" metadata.json) | jq . > new_metadata.json
-          cat new_metadata.json > metadata.json
-          git add metadata.json
-          git commit -m "Bumped version to $version"
-          git push "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git" master
-
+          test "v$(jq -r .version metadata.json)" = "$GITHUB_REF_NAME"
+          ./scripts/package-template.sh "$RUNNER_TEMP/kotlin_maven.zip"
+          cd "$RUNNER_TEMP"
+          sha256sum kotlin_maven.zip > kotlin_maven.zip.sha256
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" "$RUNNER_TEMP/kotlin_maven.zip" "$RUNNER_TEMP/kotlin_maven.zip.sha256" --generate-notes
