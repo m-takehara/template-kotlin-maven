@@ -5,24 +5,18 @@ Kotlin template for Gauge using maven as build tool
 ## Prerequisites
 
 ```
-$ java -version
-openjdk version "11.0.2" 2019-01-15
-OpenJDK Runtime Environment 18.9 (build 11.0.2+9)
-OpenJDK 64-Bit Server VM 18.9 (build 11.0.2+9, mixed mode)
+$ java --version
+openjdk 25.0.5 2026-10-20 LTS
+OpenJDK Runtime Environment Temurin-25.0.5+8 (build 25.0.5+8-LTS)
+OpenJDK 64-Bit Server VM Temurin-25.0.5+8 (build 25.0.5+8-LTS, mixed mode, sharing)
 
 $ gauge version
-Gauge version: 1.4.3
-Commit Hash: f98dd40
-
-Plugins
--------
-html-report (4.1.4)
-java (0.9.1)
-screenshot (0.1.0)
+Gauge version: 1.6.41
+Commit Hash: 1960cd7
 ```
 
 ## How to use
 
 ```
-$ gauge init https://github.com/m-takehara/template-kotlin-maven/releases/download/v0.0.3/kotlin_maven.zip
+$ gauge init https://github.com/m-takehara/template-kotlin-maven/releases/download/v0.0.4/kotlin_maven.zip
 ```
